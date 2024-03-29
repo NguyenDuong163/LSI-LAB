@@ -1,122 +1,359 @@
-module State(input [2:0] next_state, input clk,  output reg [2:0] state);
-	always @(posedge clk)
-	begin
-	  state <= next_state;
-	end
-endmodule
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03/29/2024 01:48:06 PM
+// Design Name: 
+// Module Name: bound_flasher
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
 
-module Decode(input [3:0] index, output reg [15:0] led);
+module bound_flasher(reset_n, clock, flick, LED);
+
+input reset_n;
+input clock;
+input flick;
+output [15:0] LED;
+
+reg [15:0] LED;
+reg [1:0] operation;
+
+wire clock, reset_n, flick;
+
+parameter UNCHANGE 		  =  2'b00;
+parameter ON			  =  2'b01;
+parameter OFF 		      =  2'b10;
+parameter KICK_BACK	      =  2'b11;
+
+
+parameter NUM_OF_STATE =7;
+
+//Listing states
+parameter INIT              = 7'b0000001;
+parameter ZERO_FIFTHTEEN    = 7'b0000010;
+parameter FIFTHTEEN_FIVE    = 7'b0000100;
+parameter FIVE_TEN          = 7'b0001000;
+parameter TEN_ZERO          = 7'b0010000;
+parameter ZERO_FIVE         = 7'b0100000;
+parameter FIVE_ZERO         = 7'b1000000;
+
+
+reg [NUM_OF_STATE -1:0] state;
+reg [NUM_OF_STATE -1:0] next_state;
+
+integer index;
+integer i;
+
+//State block
+always @(posedge clock or negedge reset_n)
 begin
-  case (index)
-    4'b0000 : led = 16'b00_00_00_00_00_00_00_01; //0
-    4'b0001 : led = 16'b00_00_00_00_00_00_00_11; //1
-    4'b0010 : led = 16'b00_00_00_00_00_00_01_11; //2 
-    4'b0011 : led = 16'b00_00_00_00_00_00_11_11; //3
-    4'b0100 : led = 16'b00_00_00_00_00_01_11_11; //4
-    4'b0101 : led = 16'b00_00_00_00_00_11_11_11; //5
-    4'b0110 : led = 16'b00_00_00_00_01_11_11_11; //6
-    4'b0111 : led = 16'b00_00_00_00_11_11_11_11; //7
-    4'b1000 : led = 16'b00_00_00_01_11_11_11_11; //8
-    4'b1001 : led = 16'b00_00_00_11_11_11_11_11; //9
-    4'b1010 : led = 16'b00_00_01_11_11_11_11_11; //10
-    4'b1011 : led = 16'b00_00_11_11_11_11_11_11; //11
-    4'b1100 : led = 16'b00_01_11_11_11_11_11_11; //12
-    4'b1101 : led = 16'b00_11_11_11_11_11_11_11; //13
-    4'b1110 : led = 16'b01_11_11_11_11_11_11_11; //14
-    4'b1111 : led = 16'b11_11_11_11_11_11_11_11; //15
-    default : led = 16'b00_00_00_00_00_00_00_00;
-  endcase
+
+	if(!reset_n) begin
+	
+		state <=  INIT;
+			
+	end
+	
+	else begin
+	
+		state <= next_state;
+		
+	end
+
 end
-endmodule
 
 
-module FSM(input clk, input rst, input flk,
-           input [3:0] index, input [2:0] state, 
-           output reg [2:0] next_state); 
-    localparam S0 = 3'b000,
-               S1 = 3'b001,
-               S2 = 3'b010,
-               S3 = 3'b011,
-               S4 = 3'b100,
-               S5 = 3'b101,
-               S6 = 3'b110;
+//Index Calculating Block
+always @(posedge clock or negedge reset_n)
+begin
+
+    if (!reset_n) begin
     
-    always @(posedge clk) begin
+        index<=-1;
+        
+    end
+    
+    else begin
+    
+        if (operation == ON)begin
+            
+            index <= index+1;
+            
+        end
+        
+        if (operation == OFF) begin
+        
+            index <= index-1;
+           
+        end
+        
+        if (operation == UNCHANGE) begin
+        
+            index <= index;
+            
+        end
+       
+    end
+    
+end
+
+//Flick check block
+
+always @(state or flick or index)
+begin
+
+    operation = 2'b00;
+    
+    case (state)
+    
+    INIT: begin
+    
+            if (index >=0) operation = OFF; //khi v? tr?ng thái ban ??u, các ?èn ph?i ???c t?t
+            
+            else if (flick) operation = ON;  //not sure
+            
+            else operation = UNCHANGE;
+            
+    end
+    
+    ZERO_FIFTHTEEN: begin
+    
+            if (index < 15) begin
+            
+                operation = ON;  //ch?a b?t h?t ?èn thì ti?p t?c b?t
+            
+            end
+            
+            else begin
+            
+                operation = OFF;            //?èn sáng h?t thì vào tr?ng thái t?t d?n
+            
+            end
+    end
+            
+    FIFTHTEEN_FIVE: begin
+    
+            if (flick && index == 5) begin 
+                
+                operation = KICK_BACK;
+                
+            end
+            
+            else if (index >= 5) operation = OFF; //ti?p t?c t?t cho t?i ?èn 5
+            
+            else operation = ON;
+      
+    end
+    
+    FIVE_TEN: begin
+    
+            if (index == 10) operation = OFF;
+            
+            else operation = ON;      
+            
+    end
+    
+    TEN_ZERO: begin
+    
+            if (flick && (index == 5 || index == 0)) operation = KICK_BACK;
+            
+            else if (index == 0) operation = ON;
+            
+            else operation = OFF;
+            
+    end
+    
+    ZERO_FIVE: begin
+    
+            if (index == 5) operation = OFF;
+            
+            else operation = ON;
+            
+    end       
+    FIVE_ZERO: begin
+     
+            if (index >= 0) operation = OFF;
+            
+            else operation =  ON;
+          
+    end
+    
+    default: operation = UNCHANGE;
+    
+    endcase
+    
+end    
+
+// FSM 
+always @(state or operation)
+begin
+
         case(state)
-            S0: if(rst == 1 && flk == 1 && index == 0) begin
-                next_state <= S1;
-            end
-            S1: if(index == 15) begin
-                next_state <= S2;
-            end
-            S2: if(index == 5) begin
-                if(flk == 0) begin
-                    next_state <= S3;
-                end else begin
-                    next_state <= S1;
+        
+        INIT: begin
+                
+                if (operation == ON) begin
+                    
+                    next_state = ZERO_FIFTHTEEN;
+                    
                 end
+                
+                else begin
+                
+                    next_state = INIT;
+                    
+                end
+          end
+          
+         ZERO_FIFTHTEEN: begin
+         
+                if (operation == ON) begin
+                
+                    next_state = ZERO_FIFTHTEEN;
+                    
+                end
+                
+                else begin
+                
+                    next_state = FIFTHTEEN_FIVE;
+                    
+                end
+                
+          end
+          
+          FIFTHTEEN_FIVE: begin
+          
+                if (operation == KICK_BACK) begin
+                
+                    next_state = ZERO_FIFTHTEEN;
+                    
+                end
+                
+                else if (operation == OFF) begin
+                
+                    next_state = FIFTHTEEN_FIVE;
+                    
+                end
+                
+                else next_state = FIVE_TEN;
+                
+           end
+           
+          FIVE_TEN: begin
+                
+                if (operation == OFF) begin
+                
+                    next_state =  FIVE_TEN;
+                    
+                end
+                
+                else begin
+                
+                    next_state = TEN_ZERO;      
+                
+                end   
+            
+           end
+            
+           TEN_ZERO: begin
+            
+                if (operation == KICK_BACK) begin
+                
+                    next_state = FIVE_TEN;
+                    
+                end
+                
+                else if (operation == OFF) begin 
+                
+                    next_state = TEN_ZERO;
+                    
+                end
+                
+                else begin
+                
+                    next_state = ZERO_FIVE;
+                    
+                end
+                
+           end
+           
+           ZERO_FIVE: begin
+           
+                if (operation == ON) begin
+                    
+                    next_state =  ZERO_FIVE;
+                    
+                end
+                
+                else begin
+                
+                    next_state = FIVE_ZERO;
+                    
+                end
+                
             end
-            S3: if(index == 10) begin
-                next_state <= S4;
-            end
-            S4: if(index == 0 || index == 5) begin
-                if(flk == 0) begin
-                    if(index == 0) begin
-                        next_state <= S5;
+            
+            FIVE_ZERO: begin
+            
+                    if (operation == OFF) begin
+                    
+                        next_state = FIVE_ZERO;
+                        
                     end
-                end else begin 
-                    next_state <= S3;
-                end
+                    
+                    else begin
+                    
+                        next_state = INIT;
+                        
+                    end
+                    
             end
-            S5: if(index == 5) begin
-                next_state <= S6;
-            end
-            S6: if(index == 0) begin
-                next_state <= S0;
-            end
-			default:
-    end
-end module
+                    
+            default: next_state = INIT;
+            
+            endcase
+            
+end
+
+//Decode block
+
+always @(index)
+begin
+
+	if(index == -1) 
+		for(i = 0; i < 16 ; i = i + 1)
+		begin
+		
+			LED[i] = 0;
+		
+		end
+	
+
+	else
+	
+		for( i = 0; i < 16 ; i = i + 1)
+		begin
+			
+			if(i <= index) LED[i] = 1'b1;
+			
+			else LED[i] = 1'b0;
+			
+		end
+	
+end
 
 
-module Index_calculating (input [2:0] state, input clk, inout index)
-    localparam S0 = 3'b000,
-               S1 = 3'b001,
-               S2 = 3'b010,
-               S3 = 3'b011,
-               S4 = 3'b100,
-               S5 = 3'b101,
-               S6 = 3'b110;
-	always @(posedge clk) begin 
-        case(state)
-            S0: index <= 0;
-            S1: index <= index + 1;
-            S2: index <= index - 1;
-            S3: index <= index + 1;
-            S4: index <= index - 1;
-            S5: index <= index + 1;
-            S6: index <= index - 1;
-    end
-endmodule
 
-
-module main (input rst, input clk, input flk, output reg [15:0] led);
-	wire [2:0] next_state;
-	wire [2:0] state;
-	wire [3:0] index;
-	FSM FSM_run(.clk(clk), .rst(rst), .flk(flk), 
-				.index(index), .state(state), 
-				.next_state(next_state));
-	
-	
-    State State_run(.next_state(next_state), 
-					.clk(clk), .state(state));
-				
-				
-	Decode Decode_run(.index(index), .led(led));
-	
-	
-	Index_calculating Index_calculating_run(.state(state), 
-											.clk(clk), .index(index));
 endmodule

@@ -35,21 +35,17 @@ begin
 
     clock = 0;
     
-    reset_n = 0;
+    reset_n = 1;
     
     flick = 0;
     
     #2
     
-    reset_n = 1;
-    
     flick = 1;
     
-    #300
+    #100
     
-    flick = 0;
-    
-    //reset_n = 0;
+    reset_n = 0;
     
     #1000
     $finish;
