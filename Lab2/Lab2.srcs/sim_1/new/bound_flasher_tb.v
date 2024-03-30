@@ -33,17 +33,27 @@ bound_flasher uut (reset_n,clock,flick,LED);
 initial 
 begin
 
-    clock = 0;
+    clock = 1;
     
-    reset_n = 1;
+    reset_n = 0;
     
     flick = 0;
     
     #2
     
+    reset_n = 1;
+    
+    #2
     flick = 1;
     
-    #100
+    #20
+    
+    flick = 0;
+    #600
+    
+    flick = 0;
+    
+    #500
     
     reset_n = 0;
     

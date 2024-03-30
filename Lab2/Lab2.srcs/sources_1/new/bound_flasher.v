@@ -52,11 +52,12 @@ parameter FIVE_ZERO         = 7'b1000000;
 
 reg [NUM_OF_STATE -1:0] state;
 reg [NUM_OF_STATE -1:0] next_state;
+reg TEMP = 1'b1;
 
 integer index;
 integer i;
 
-//State block
+
 always @(posedge clock or negedge reset_n)
 begin
 
@@ -81,7 +82,7 @@ begin
 
     if (!reset_n) begin
     
-        index<=-1;
+        index <= -1;
         
     end
     
@@ -89,13 +90,13 @@ begin
     
         if (operation == ON)begin
             
-            index <= index+1;
+            index <= index + 1;
             
         end
         
         if (operation == OFF) begin
         
-            index <= index-1;
+            index <= index - 1;
            
         end
         
@@ -120,9 +121,13 @@ begin
     
     INIT: begin
     
-            if (index >=0) operation = OFF; //khi v? tr?ng thái ban ??u, các ?èn ph?i ???c t?t
+            if (index >= 0) operation = OFF; 
             
-            else if (flick) operation = ON;  //not sure
+            else if (flick) begin 
+                
+                    operation = ON; 
+                    
+            end
             
             else operation = UNCHANGE;
             
@@ -132,13 +137,13 @@ begin
     
             if (index < 15) begin
             
-                operation = ON;  //ch?a b?t h?t ?èn thì ti?p t?c b?t
+                operation = ON;  
             
             end
             
             else begin
             
-                operation = OFF;            //?èn sáng h?t thì vào tr?ng thái t?t d?n
+                operation = OFF;            
             
             end
     end
@@ -151,7 +156,7 @@ begin
                 
             end
             
-            else if (index >= 5) operation = OFF; //ti?p t?c t?t cho t?i ?èn 5
+            else if (index >= 5) operation = OFF; 
             
             else operation = ON;
       
@@ -159,9 +164,9 @@ begin
     
     FIVE_TEN: begin
     
-            if (index == 10) operation = OFF;
+            if (index < 10) operation = ON;
             
-            else operation = ON;      
+            else operation = OFF;      
             
     end
     
@@ -169,9 +174,9 @@ begin
     
             if (flick && (index == 5 || index == 0)) operation = KICK_BACK;
             
-            else if (index == 0) operation = ON;
+            else if (index >= 0) operation = OFF;
             
-            else operation = OFF;
+            else operation = ON;
             
     end
     
@@ -186,7 +191,7 @@ begin
      
             if (index >= 0) operation = OFF;
             
-            else operation =  ON;
+           // else operation =  ON;
           
     end
     
@@ -253,7 +258,7 @@ begin
            
           FIVE_TEN: begin
                 
-                if (operation == OFF) begin
+                if (operation == ON) begin
                 
                     next_state =  FIVE_TEN;
                     
@@ -340,7 +345,6 @@ begin
 		
 		end
 	
-
 	else
 	
 		for( i = 0; i < 16 ; i = i + 1)
@@ -354,6 +358,28 @@ begin
 	
 end
 
-
+//always @(index) 
+//begin
+//        case (index)
+//        -1: LED = 16'b00_00_00_00_00_00_00_00;
+//        0 : LED = 16'b00_00_00_00_00_00_00_01; //0
+//        1 : LED = 16'b00_00_00_00_00_00_00_11; //1
+//        2 : LED = 16'b00_00_00_00_00_00_01_11; //2 
+//        3 : LED = 16'b00_00_00_00_00_00_11_11; //3
+//        4 : LED = 16'b00_00_00_00_00_01_11_11; //4
+//        5 : LED = 16'b00_00_00_00_00_11_11_11; //5
+//        6 : LED = 16'b00_00_00_00_01_11_11_11; //6
+//        7 : LED = 16'b00_00_00_00_11_11_11_11; //7
+//        8 : LED = 16'b00_00_00_01_11_11_11_11; //8
+//        9 : LED = 16'b00_00_00_11_11_11_11_11; //9
+//        10 : LED = 16'b00_00_01_11_11_11_11_11; //10
+//        11 : LED = 16'b00_00_11_11_11_11_11_11; //11
+//        12 : LED = 16'b00_01_11_11_11_11_11_11; //12
+//        13 : LED = 16'b00_11_11_11_11_11_11_11; //13
+//        14 : LED = 16'b01_11_11_11_11_11_11_11; //14
+//        15 : LED = 16'b11_11_11_11_11_11_11_11; //15
+//        default : LED = 16'b00_00_00_00_00_00_00_00;
+//        endcase
+//end
 
 endmodule
