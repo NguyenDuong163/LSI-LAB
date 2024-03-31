@@ -82,7 +82,7 @@ begin
 
     if (!reset_n) begin
     
-        index <= -1;
+        index <= -3;
         
     end
     
@@ -150,7 +150,7 @@ begin
             
     FIFTHTEEN_FIVE: begin
     
-            if (flick && index == 5) begin 
+            if (flick && index == 4) begin 
                 
                 operation = KICK_BACK;
                 
@@ -172,7 +172,7 @@ begin
     
     TEN_ZERO: begin
     
-            if (flick && (index == 5 || index == 0)) operation = KICK_BACK;
+            if (flick && (index == 4 || index == -1)) operation = KICK_BACK;
             
             else if (index >= 0) operation = OFF;
             
@@ -337,7 +337,7 @@ end
 always @(index)
 begin
 
-	if(index == -1) 
+	if(index == -3) 
 		for(i = 0; i < 16 ; i = i + 1)
 		begin
 		
